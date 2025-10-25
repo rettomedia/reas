@@ -11,5 +11,5 @@ initSocket(io);
 initializeWhatsApp(io);
 
 server.listen(3000, () => {
-    console.log('Server 3000 portunda çalışıyor.')
+    console.log('WhatsApp servisi 3000 portunda çalışıyor.')
 });
