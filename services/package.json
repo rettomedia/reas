@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "wp": "node whatsapp/server.js",
-    "license": "node licensing/server.js"
+    "license": "node licensing/server.js",
+    "email": "node mailanalysis/server.js"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +18,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "groq-sdk": "^0.34.0",
+    "imap": "^0.8.19",
     "jsonwebtoken": "^9.0.2",
+    "mailparser": "^3.7.5",
     "sequelize": "^6.37.7",
     "socket.io": "^4.8.1",
     "sqlite3": "^5.1.7",
