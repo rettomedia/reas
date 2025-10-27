@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+
+{% block title %}Kurumsal Yönetim Paneli{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+                <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">WhatsApp Asistan</h3>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 {% if is_ready %}bg-green-100/50 dark:bg-green-900/20{% else %}bg-red-100/50 dark:bg-red-900/20{% endif %} backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 lg:w-6 lg:h-6 {% if is_ready %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">
+                                {% if is_ready %}Aktif{% elif is_connecting %}Bağlanıyor...{% elif qr_code %}QR Gerekli{% else %}Pasif{% endif %}
+                            </span>
+                            {% if new_messages %}
+                            <span class="px-2 py-1 lg:px-3 lg:py-1 {% if is_ready %}bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300{% else %}bg-red-100/70 dark:bg-red-900/30 text-red-800 dark:text-red-300{% endif %} text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">
+                                +{{ new_messages }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center text-xs lg:text-sm {% if is_ready %}text-gray-600 dark:text-gray-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                            <span class="w-2 h-2 {% if is_ready %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full mr-2 shadow-lg"></span>
+                            <span>
+                                {% if is_ready %}Şu anda çalışıyor{% elif is_connecting %}Bağlanıyor...{% elif qr_code %}QR ile giriş gerekli{% else %}Pasif{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Lisanslar</h3>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100/50 dark:bg-blue-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{{licenses.count}}</span>
+                        </div>
+                        <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2 shadow-lg"></span>
+                            <span>{{active_licenses.count}} Aktif Lisans</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Performans</h3>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100/50 dark:bg-purple-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">%99.8</span>
+                            <span class="px-2 py-1 lg:px-3 lg:py-1 bg-purple-100/70 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Optimal</span>
+                        </div>
+                        <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full mr-2 shadow-lg"></span>
+                            <span>Son 24 Saat</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Mesajlar</h3>
+                        <div class="w-10 h-10 lg:w-12 lg:h-12 bg-orange-100/50 dark:bg-orange-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">8.4K</span>
+                            <span class="px-2 py-1 lg:px-3 lg:py-1 bg-orange-100/70 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">+%18</span>
+                        </div>
+                        <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                            <span class="w-2 h-2 bg-orange-500 rounded-full mr-2 shadow-lg"></span>
+                            <span>Günlük Hacim</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+                <div class="xl:col-span-2 space-y-6 lg:space-y-8">
+                    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30">
+                        <div class="px-4 lg:px-6 py-4 lg:py-5 border-b border-white/20 dark:border-gray-700/30 flex items-center justify-between">
+                            <h2 class="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">Asistan Yönetimi</h2>
+                        </div>
+                        <div class="p-4 lg:p-6">
+                            {% if request.user.whatsapp_service %}
+                                <div id="assistant-panel"></div>
+                            {% else %}
+                                <div class="p-4 text-sm text-gray-500 dark:text-gray-400">
+                                    WhatsApp Asistan yönetim yetkiniz yok.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30">
+                        <div class="px-4 lg:px-6 py-4 lg:py-5 border-b border-white/20 dark:border-gray-700/30">
+                            <h2 class="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">Lisans Yönetimi</h2>
+                        </div>
+                        <div class="p-4 lg:p-6">
+                            <div class="space-y-4">
+                                {% for license in licenses %}
+                                <div class="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg rounded-xl border border-white/30 dark:border-gray-700/30">
+                                    <div class="flex items-center space-x-3 lg:space-x-4">
+                                        <div class="w-10 h-10 lg:w-12 lg:h-12 {% if license.is_active %}bg-gradient-to-br from-purple-500 to-purple-600{% else %}bg-gradient-to-br from-gray-400 to-gray-500{% endif %} rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-sm lg:text-base font-semibold text-gray-800 dark:text-white truncate">{{ license.key }}</p>
+                                            <p class="text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                                                {% if license.is_active %}
+                                                    <div class="flex items-center space-x-2">
+                                                        <div class="w-3 h-3 bg-green-500 rounded-full shadow-lg"></div>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">Aktif</p>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="flex items-center space-x-2">
+                                                        <div class="w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400">Deaktif</p>
+                                                    </div>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-center text-gray-500 dark:text-gray-400">Henüz lisans yok.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6 lg:space-y-8">
+                    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30">
+                        <div class="px-4 lg:px-6 py-4 lg:py-5 border-b border-white/20 dark:border-gray-700/30">
+                            <h2 class="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">Sistem Sağlığı</h2>
+                        </div>
+                        <div class="p-4 lg:p-6">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Sistem Koruyucu</span>
+                                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Çalışıyor</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Veritabanı</span>
+                                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Çalışıyor</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Panel Altyapısı</span>
+                                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Çalışıyor</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-800/80 to-gray-900/80 dark:from-gray-700/80 dark:to-gray-800/80 backdrop-blur-xl rounded-2xl p-4 lg:p-6 shadow-lg border border-white/10 dark:border-gray-600/30">
+                        <h3 class="text-lg lg:text-xl font-semibold text-white mb-4">Hızlı İşlemler</h3>
+                        <div class="space-y-3">
+                            <a class="w-full px-4 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm border border-white/20 text-sm font-medium">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                <span>Asistan Ekle</span>
+                            </a>
+                            <a href="javascript:void(0);" onclick="openAddModal()" class="w-full px-4 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-200 flex items-center justify-center space-x-3 backdrop-blur-sm border border-white/20 text-sm font-medium">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <span>Lisans Ekle</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+<div id="addLicenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 dark:border-gray-700/30 w-full max-w-md transform scale-95 transition-transform duration-300">
+            <div class="px-6 py-4 border-b border-white/20 dark:border-gray-700/30">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Yeni Lisans Ekle</h3>
+                    <button onclick="closeAddModal()" class="w-8 h-8 bg-white/50 dark:bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="addLicenseForm" method="POST" action="{% url 'add_license' %}">
+                {% csrf_token %}
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Yeni lisans anahtarı otomatik olarak oluşturulacak ve hesabınıza atanacaktır.</p>
+                </div>
+
+                <div class="px-6 py-4 border-t border-white/20 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-2xl">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-500/70 dark:bg-gray-700/70 text-white rounded-xl hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors text-sm font-medium backdrop-blur-sm">
+                            İptal
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-lg backdrop-blur-sm border border-blue-400/20 text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Lisans Ekle</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+let addModal = document.getElementById('addLicenseModal');
+let editModal = document.getElementById('editLicenseModal');
+let currentLicenseId = null;
+
+function openAddModal() {
+    addModal.classList.remove('opacity-0', 'pointer-events-none');
+    addModal.querySelector('div > div').classList.remove('scale-95');
+    addModal.querySelector('div > div').classList.add('scale-100');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddModal() {
+    addModal.classList.add('opacity-0', 'pointer-events-none');
+    addModal.querySelector('div > div').classList.remove('scale-100');
+    addModal.querySelector('div > div').classList.add('scale-95');
+    document.body.style.overflow = 'auto';
+}
+
+function openEditModal(licenseData) {
+    document.getElementById('edit_license_key').value = licenseData.key;
+    document.getElementById('edit_is_active').checked = licenseData.is_active;
+    document.getElementById('edit_is_active').previousElementSibling.value = licenseData.is_active;
+    document.getElementById('editLicenseForm').action = `/licensing/${licenseData.id}/edit/`;
+    currentLicenseId = licenseData.id;
+
+    editModal.classList.remove('opacity-0', 'pointer-events-none');
+    editModal.querySelector('div > div').classList.remove('scale-95');
+    editModal.querySelector('div > div').classList.add('scale-100');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+    editModal.classList.add('opacity-0', 'pointer-events-none');
+    editModal.querySelector('div > div').classList.remove('scale-100');
+    editModal.querySelector('div > div').classList.add('scale-95');
+    document.body.style.overflow = 'auto';
+    currentLicenseId = null;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAddModal();
+        closeEditModal();
+    }
+});
+
+addModal.addEventListener('click', function(e) {
+    if (e.target === addModal) closeAddModal();
+});
+
+editModal.addEventListener('click', function(e) {
+    if (e.target === editModal) closeEditModal();
+});
+
+document.getElementById('addLicenseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await submitForm(this, 'Lisans başarıyla eklendi!');
+});
+
+document.getElementById('editLicenseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await submitForm(this, 'Lisans başarıyla güncellendi!');
+});
+
+async function submitForm(form, successMessage) {
+    const formData = new FormData(form);
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+
+    submitButton.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        İşleniyor...
+    `;
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(successMessage, 'success');
+            closeAddModal();
+            closeEditModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(result.message || 'Bir hata oluştu!', 'error');
+        }
+    } catch (error) {
+        showNotification('İşlem sırasında bir hata oluştu!', 'error');
+    } finally {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    }
+}
+
+function editLicense(licenseId) {
+    fetch(`/licensing/${licenseId}/edit/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            openEditModal(data.license);
+        } else {
+            showNotification(data.message || 'Lisans bilgileri alınamadı!', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('İşlem sırasında bir hata oluştu!', 'error');
+    });
+}
+
+function toggleLicense(licenseId) {
+    if (confirm('Lisans durumunu değiştirmek istediğinizden emin misiniz?')) {
+        fetch(`/licensing/${licenseId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İşlem sırasında bir hata oluştu!', 'error');
+        });
+    }
+}
+
+function deleteLicense(licenseId) {
+    if (confirm('Bu lisansı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+        fetch(`/licensing/${licenseId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İşlem sırasında bir hata oluştu!', 'error');
+        });
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    async function fetchAssistants() {
+    try {
+        const statusRes = await fetch('http://0.0.0.0:3000/api/status', { cache: 'no-store' });
+        const statusData = await statusRes.json();
+
+        const container = document.getElementById('assistant-panel');
+        container.innerHTML = '';
+
+        if (!statusData.state.isReady) {
+            const warning = document.createElement('div');
+            warning.className = "p-6 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 flex flex-col items-center justify-center space-y-2";
+            warning.innerHTML = `
+                <p class="text-sm lg:text-base font-semibold">WhatsApp bağlantısı yok veya QR taramanız gerekiyor.</p>
+                ${statusData.state.qrCode ? `<img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(statusData.state.qrCode)}&size=150x150" alt="QR Code">` : ''}
+            `;
+            container.appendChild(warning);
+            return;
+        }
+
+        const convRes = await fetch('http://0.0.0.0:3000/api/conversations', { cache: 'no-store' });
+        const convData = await convRes.json();
+
+        Object.values(convData).forEach(conv => {
+            const card = document.createElement('div');
+            card.className = "flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg rounded-xl border border-white/30 dark:border-gray-700/30";
+
+            const isActive = conv.messageCount > 0;
+
+            card.innerHTML = `
+                <div class="flex items-center space-x-3 lg:space-x-4">
+                    <div class="w-2 h-2 ${isActive ? 'bg-green-500' : 'bg-red-500'} rounded-full shadow-lg"></div>
+                    <div class="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+                        <svg class="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm lg:text-base font-semibold text-gray-800 dark:text-white truncate">${conv.phone}</p>
+                        <p class="text-xs lg:text-sm text-gray-600 dark:text-gray-400 truncate">${conv.messageCount} mesaj/gün</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2 py-1 lg:px-3 lg:py-1 ${isActive ? 'bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100/70 dark:bg-red-900/30 text-red-800 dark:text-red-300'} text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">
+                        ${isActive ? 'Aktif' : 'Pasif'}
+                    </span>
+                    <button class="w-8 h-8 lg:w-9 lg:h-9 bg-white/80 dark:bg-gray-700/80 backdrop-blur-lg border border-white/30 dark:border-gray-600/30 rounded-xl flex items-center justify-center hover:bg-white dark:hover:bg-gray-600 transition-all duration-200">
+                        <svg class="w-4 h-4 lg:w-5 lg:h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (err) {
+        console.error('Assistant fetch error:', err);
+    }
+}
+
+    fetchAssistants();
+    setInterval(fetchAssistants, 5000);
+});
+</script>
+{% endblock %}

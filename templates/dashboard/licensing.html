@@ -1,0 +1,584 @@
+{% extends 'base.html' %}
+
+{% block title %}Lisans Yönetimi{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-4 lg:p-6">
+    <div class="mb-6 lg:mb-8">
+        <h1 class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white mb-2">Lisans Yönetimi</h1>
+        <p class="text-gray-600 dark:text-gray-400">Lisans anahtarlarınızı yönetin</p>
+    </div>
+
+    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6 mb-6 lg:mb-8">
+        <form method="GET" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Lisans ara..." class="text-gray-900 dark:text-white pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm text-sm w-64">
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <select name="status" class="text-gray-900 dark:text-white px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm text-sm">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktif</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Pasif</option>
+                </select>
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors text-sm">
+                    Uygula
+                </button>
+                {% if search_query or status_filter %}
+                <a href="{% url 'licensing' %}" class="px-4 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors text-sm">
+                    Temizle
+                </a>
+                {% endif %}
+            </div>
+            <button type="button" onclick="openAddModal()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-lg backdrop-blur-sm border border-blue-400/20 text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                <span>Yeni Lisans Ekle</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+        <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Toplam Lisans</h3>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100/50 dark:bg-blue-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{{ total_licenses_count }}</span>
+                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-blue-100/70 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Toplam</span>
+                </div>
+                <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full mr-2 shadow-lg"></span>
+                    <span>Sistemdeki tüm lisanslar</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Aktif Lisans</h3>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100/50 dark:bg-green-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{{ active_licenses_count }}</span>
+                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Aktif</span>
+                </div>
+                <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2 shadow-lg"></span>
+                    <span>Şu anda aktif lisanslar</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Pasif Lisans</h3>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-red-100/50 dark:bg-red-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{{ inactive_licenses_count }}</span>
+                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-red-100/70 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Pasif</span>
+                </div>
+                <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2 shadow-lg"></span>
+                    <span>Şu anda pasif lisanslar</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30 p-4 lg:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base lg:text-lg font-semibold text-gray-800 dark:text-white">Filtrelenmiş</h3>
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-orange-100/50 dark:bg-orange-900/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 lg:w-6 lg:h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">{{ licenses.count }}</span>
+                    <span class="px-2 py-1 lg:px-3 lg:py-1 bg-orange-100/70 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs lg:text-sm font-medium rounded-xl backdrop-blur-sm">Kayıt</span>
+                </div>
+                <div class="flex items-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2 h-2 bg-orange-500 rounded-full mr-2 shadow-lg"></span>
+                    <span>Filtrelenmiş kayıt sayısı</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30">
+        <div class="px-4 lg:px-6 py-4 lg:py-5 border-b border-white/20 dark:border-gray-700/30">
+            <h2 class="text-lg lg:text-xl font-bold text-gray-800 dark:text-white">Lisans Listesi</h2>
+        </div>
+        <div class="p-4 lg:p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-white/20 dark:border-gray-700/30">
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Lisans Anahtarı</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Durum</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Oluşturulma</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Son Güncelleme</th>
+                            <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for license in licenses %}
+                        <tr class="border-b border-white/10 dark:border-gray-700/20 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-colors duration-150">
+                            <td class="py-3 px-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800 dark:text-white">{{ license.key }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">ID: {{ license.id }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                {% if license.is_active %}
+                                <span class="px-2 py-1 bg-green-100/70 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs font-medium rounded-full backdrop-blur-sm">Aktif</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-red-100/70 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs font-medium rounded-full backdrop-blur-sm">Pasif</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ license.created_at|date:"d.m.Y H:i" }}</span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ license.updated_at|date:"d.m.Y H:i" }}</span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="toggleLicense({{ license.id }})" class="w-8 h-8 bg-white/80 dark:bg-gray-700/80 backdrop-blur-lg border border-white/30 dark:border-gray-600/30 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-600 transition-all duration-200 group">
+                                        {% if license.is_active %}
+                                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {% else %}
+                                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {% endif %}
+                                    </button>
+                                    <button onclick="deleteLicense({{ license.id }})" class="w-8 h-8 bg-white/80 dark:bg-gray-700/80 backdrop-blur-lg border border-white/30 dark:border-gray-600/30 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-600 transition-all duration-200 group">
+                                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-8 px-4 text-center">
+                                <div class="flex flex-col items-center space-y-3">
+                                    <div class="w-16 h-16 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Henüz lisans bulunmuyor</p>
+                                    <button onclick="openAddModal()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-medium">
+                                        İlk Lisansı Ekle
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-8 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">API Dökümantasyonu: Lisans Doğrulama</h2>
+                </div>
+
+                <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    Lisans doğrulama sisteminin entegrasyonu için gerekli adımlar.
+                </p>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">1</div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Lisans Anahtarını Oluşturma</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                                Panel üzerinden yeni bir lisans anahtarı oluşturabilirsiniz. Oluşturulan anahtarlar sadece
+                                <span class="inline-block px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-xs font-mono font-medium">Aktif</span>
+                                durumdaysa geçerlidir.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">2</div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">API Endpoint</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">Lisans doğrulama için API endpoint'i:</p>
+                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 font-mono text-sm">
+                                <span class="text-gray-900 dark:text-white">POST</span> <span class="text-blue-600 dark:text-blue-400">https://</span><span class="text-purple-600 dark:text-purple-400">your-domain</span><span class="text-gray-600 dark:text-gray-400">/licensing/verify/</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">3</div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Request Gönderimi</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">API'ye gönderilecek veri JSON formatında olmalıdır:</p>
+                            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-gray-100">
+                                <span class="text-purple-400">{</span><br>
+                                <span class="text-blue-400 ml-4">"key"</span><span class="text-gray-300">: </span><span class="text-green-400">"LIC-XXXXXXXXXXXXXXX"</span><br>
+                                <span class="text-purple-400">}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">4</div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Response Yapısı</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-3">Başarılı bir doğrulama sonrası API aşağıdaki formatta döner:</p>
+                            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-gray-100 mb-3">
+                                <span class="text-purple-400">{</span><br>
+                                <span class="text-blue-400 ml-4">"valid"</span><span class="text-gray-300">: </span><span class="text-green-400">true</span><span class="text-gray-300">,</span><br>
+                                <span class="text-blue-400 ml-4">"message"</span><span class="text-gray-300">: </span><span class="text-green-400">"License is active."</span><span class="text-gray-300">,</span><br>
+                                <span class="text-blue-400 ml-4">"license"</span><span class="text-gray-300">: {</span><br>
+                                <span class="text-blue-400 ml-8">"id"</span><span class="text-gray-300">: </span><span class="text-orange-400">1</span><span class="text-gray-300">,</span><br>
+                                <span class="text-blue-400 ml-8">"key"</span><span class="text-gray-300">: </span><span class="text-green-400">"LIC-XXXXXXXXXXXXXXX"</span><span class="text-gray-300">,</span><br>
+                                <span class="text-blue-400 ml-8">"is_active"</span><span class="text-gray-300">: </span><span class="text-green-400">true</span><br>
+                                <span class="text-gray-300 ml-4">}</span><br>
+                                <span class="text-purple-400">}</span>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">Geçersiz veya pasif lisans durumunda:</p>
+                            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 font-mono text-sm text-gray-100">
+                                <span class="text-purple-400">{</span><br>
+                                <span class="text-blue-400 ml-4">"valid"</span><span class="text-gray-300">: </span><span class="text-green-400">false</span><span class="text-gray-300">,</span><br>
+                                <span class="text-blue-400 ml-4">"message"</span><span class="text-gray-300">: </span><span class="text-green-400">"Key is invalid."</span><br>
+                                <span class="text-purple-400">}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">5</div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">Entegrasyon Önerisi</h3>
+                            <p class="text-gray-600 dark:text-gray-300 text-sm mb-3">Müşteri uygulamaları HTTP POST isteği yapabilecek herhangi bir platform veya dilde hazırlanabilir:</p>
+                            <div class="space-y-2">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <span class="font-medium text-gray-700 dark:text-gray-300 text-sm">Python</span>
+                                    </div>
+                                    <code class="text-xs text-gray-600 dark:text-gray-400 font-mono">requests.post("https://your-domain/licensing/verify/", json={"key":"LIC-XXXX"})</code>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                        <span class="font-medium text-gray-700 dark:text-gray-300 text-sm">JavaScript</span>
+                                    </div>
+                                    <code class="text-xs text-gray-600 dark:text-gray-400 font-mono">fetch("https://your-domain/licensing/verify/", {method:"POST", body:JSON.stringify({key:"LIC-XXXX"})})</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="addLicenseModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 dark:border-gray-700/30 w-full max-w-md transform scale-95 transition-transform duration-300">
+            <div class="px-6 py-4 border-b border-white/20 dark:border-gray-700/30">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">Yeni Lisans Ekle</h3>
+                    <button onclick="closeAddModal()" class="w-8 h-8 bg-white/50 dark:bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <form id="addLicenseForm" method="POST" action="{% url 'add_license' %}">
+                {% csrf_token %}
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Yeni lisans anahtarı otomatik olarak oluşturulacak ve hesabınıza atanacaktır.</p>
+                </div>
+
+                <div class="px-6 py-4 border-t border-white/20 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-2xl">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-gray-500/70 dark:bg-gray-700/70 text-white rounded-xl hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors text-sm font-medium backdrop-blur-sm">
+                            İptal
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-lg backdrop-blur-sm border border-blue-400/20 text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Lisans Ekle</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+let addModal = document.getElementById('addLicenseModal');
+let editModal = document.getElementById('editLicenseModal');
+let currentLicenseId = null;
+
+function openAddModal() {
+    addModal.classList.remove('opacity-0', 'pointer-events-none');
+    addModal.querySelector('div > div').classList.remove('scale-95');
+    addModal.querySelector('div > div').classList.add('scale-100');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddModal() {
+    addModal.classList.add('opacity-0', 'pointer-events-none');
+    addModal.querySelector('div > div').classList.remove('scale-100');
+    addModal.querySelector('div > div').classList.add('scale-95');
+    document.body.style.overflow = 'auto';
+}
+
+function openEditModal(licenseData) {
+    document.getElementById('edit_license_key').value = licenseData.key;
+    document.getElementById('edit_is_active').checked = licenseData.is_active;
+    document.getElementById('edit_is_active').previousElementSibling.value = licenseData.is_active;
+    document.getElementById('editLicenseForm').action = `/licensing/${licenseData.id}/edit/`;
+    currentLicenseId = licenseData.id;
+
+    editModal.classList.remove('opacity-0', 'pointer-events-none');
+    editModal.querySelector('div > div').classList.remove('scale-95');
+    editModal.querySelector('div > div').classList.add('scale-100');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+    editModal.classList.add('opacity-0', 'pointer-events-none');
+    editModal.querySelector('div > div').classList.remove('scale-100');
+    editModal.querySelector('div > div').classList.add('scale-95');
+    document.body.style.overflow = 'auto';
+    currentLicenseId = null;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAddModal();
+        closeEditModal();
+    }
+});
+
+addModal.addEventListener('click', function(e) {
+    if (e.target === addModal) closeAddModal();
+});
+
+editModal.addEventListener('click', function(e) {
+    if (e.target === editModal) closeEditModal();
+});
+
+document.getElementById('addLicenseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await submitForm(this, 'Lisans başarıyla eklendi!');
+});
+
+document.getElementById('editLicenseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    await submitForm(this, 'Lisans başarıyla güncellendi!');
+});
+
+async function submitForm(form, successMessage) {
+    const formData = new FormData(form);
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+
+    submitButton.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        İşleniyor...
+    `;
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(successMessage, 'success');
+            closeAddModal();
+            closeEditModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(result.message || 'Bir hata oluştu!', 'error');
+        }
+    } catch (error) {
+        showNotification('İşlem sırasında bir hata oluştu!', 'error');
+    } finally {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    }
+}
+
+function editLicense(licenseId) {
+    fetch(`/licensing/${licenseId}/edit/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            openEditModal(data.license);
+        } else {
+            showNotification(data.message || 'Lisans bilgileri alınamadı!', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('İşlem sırasında bir hata oluştu!', 'error');
+    });
+}
+
+function toggleLicense(licenseId) {
+    if (confirm('Lisans durumunu değiştirmek istediğinizden emin misiniz?')) {
+        fetch(`/licensing/${licenseId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İşlem sırasında bir hata oluştu!', 'error');
+        });
+    }
+}
+
+function deleteLicense(licenseId) {
+    if (confirm('Bu lisansı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+        fetch(`/licensing/${licenseId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('İşlem sırasında bir hata oluştu!', 'error');
+        });
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

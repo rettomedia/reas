@@ -1,0 +1,1152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}WhatsApp Asistanı{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-900 font-sans transition-colors duration-300">
+    <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">WhatsApp Asistanı</h1>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <div id="status-indicator" class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                            <p id="status-text" class="text-yellow-500 dark:text-yellow-400 text-sm font-medium">Bağlantı bekleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 justify-center">
+                    <div id="socket-id" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hidden">
+                        ID: <span id="socket-id-value"></span>...
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            onclick="checkServerStatus()"
+                            class="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white text-sm rounded-xl border border-gray-300 dark:border-gray-600 flex items-center space-x-1 transition-colors duration-200"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <span>Sunucu</span>
+                        </button>
+
+                        <button
+                            onclick="forceQRRequest()"
+                            id="qr-request-btn"
+                            class="px-3 py-2 bg-purple-600 text-white text-sm rounded-xl border border-purple-500 flex items-center space-x-1 hidden transition-colors duration-200"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                            </svg>
+                            <span>QR İste</span>
+                        </button>
+
+                        <button
+                            onclick="restartWhatsApp()"
+                            id="restart-btn"
+                            class="px-3 py-2 bg-orange-600 text-white text-sm rounded-xl border border-orange-500 flex items-center space-x-1 hidden transition-colors duration-200"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>Yeniden Başlat</span>
+                        </button>
+
+                        <button
+                            onclick="reconnect()"
+                            class="px-3 py-2 bg-blue-600 text-white text-sm rounded-xl border border-blue-500 flex items-center space-x-1 transition-colors duration-200"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>Yenile</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative container mx-auto px-4 py-8">
+        <div id="debug-container" class="max-w-6xl mx-auto mb-6 hidden">
+            <div class="bg-gray-200 dark:bg-gray-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between">
+                    <span id="debug-info" class="text-gray-600 dark:text-gray-400 text-sm font-mono truncate"></span>
+                    <button
+                        onclick="hideDebug()"
+                        class="text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="connection-error" class="max-w-2xl mx-auto mb-6 hidden">
+            <div class="bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-2xl p-4">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6 text-red-500 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="text-red-700 dark:text-red-300 font-semibold">Bağlantı Sorunu</h3>
+                        <p class="text-red-600 dark:text-red-400 text-sm mt-1">
+                            Sunucuya bağlanılamıyor. Lütfen sunucunun çalıştığından emin olun.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="qr-section" class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-300 dark:border-gray-700 hidden">
+        </div>
+
+        <div id="loading-section" class="max-w-md mx-auto text-center hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-300 dark:border-gray-700">
+                <div class="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Bağlantı Kuruluyor</h3>
+                <p id="loading-text" class="text-gray-600 dark:text-gray-400 text-lg"></p>
+            </div>
+        </div>
+
+        <div id="session-section" class="max-w-2xl mx-auto hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-300 dark:border-gray-700 text-center">
+                <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Session Yükleniyor</h3>
+                <p id="session-text" class="text-gray-600 dark:text-gray-400 mb-8 text-lg"></p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                        onclick="forceQRRequest()"
+                        class="px-6 py-4 bg-purple-600 text-white rounded-2xl flex items-center justify-center space-x-3 font-semibold transition-colors duration-200"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                        <span>Yeni QR Kod İste</span>
+                    </button>
+                    <button
+                        onclick="checkServerStatus()"
+                        class="px-6 py-4 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-2xl border border-gray-300 dark:border-gray-600 flex items-center justify-center space-x-3 font-semibold transition-colors duration-200"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span>Durumu Kontrol Et</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="max-w-6xl mx-auto space-y-8 hidden">
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+class WhatsAppAssistant {
+    constructor() {
+        this.socket = null;
+        this.connected = false;
+        this.templates = [];
+        this.conversations = [];
+        this.connectionStatus = "connecting";
+        this.socketId = null;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+        this.API_BASE = "http://localhost:3000";
+
+        this.initialize();
+    }
+
+    initialize() {
+        this.initializeSocket();
+        setTimeout(() => {
+            this.checkWhatsAppStatus();
+        }, 1000);
+    }
+
+    debug(message) {
+        console.log(message);
+        const debugInfo = document.getElementById('debug-info');
+        const debugContainer = document.getElementById('debug-container');
+        if (debugInfo && debugContainer) {
+            debugInfo.textContent = message;
+            debugContainer.classList.remove('hidden');
+        }
+    }
+
+    hideDebug() {
+        document.getElementById('debug-container').classList.add('hidden');
+    }
+
+    updateStatus(status, text) {
+        this.connectionStatus = status;
+        const indicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const qrBtn = document.getElementById('qr-request-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const socketIdElement = document.getElementById('socket-id');
+        const socketIdValue = document.getElementById('socket-id-value');
+
+        if (indicator && statusText) {
+            const colors = {
+                'connecting': 'bg-yellow-400',
+                'connected': 'bg-blue-400',
+                'qr_received': 'bg-purple-400',
+                'authenticated': 'bg-orange-400',
+                'ready': 'bg-green-400',
+                'error': 'bg-red-400',
+                'disconnected': 'bg-red-400'
+            };
+
+            const textColors = {
+                'connecting': 'text-yellow-500 dark:text-yellow-400',
+                'connected': 'text-blue-500 dark:text-blue-400',
+                'qr_received': 'text-purple-500 dark:text-purple-400',
+                'authenticated': 'text-orange-500 dark:text-orange-400',
+                'ready': 'text-green-500 dark:text-green-400',
+                'error': 'text-red-500 dark:text-red-400',
+                'disconnected': 'text-red-500 dark:text-red-400'
+            };
+
+            indicator.className = `w-2 h-2 rounded-full ${colors[status] || 'bg-yellow-400'}`;
+            statusText.textContent = text;
+            statusText.className = `${textColors[status] || 'text-yellow-500 dark:text-yellow-400'} text-sm font-medium`;
+        }
+
+        if (qrBtn) {
+            qrBtn.classList.toggle('hidden', !(status === 'connected' || status === 'ready' || status === 'qr_received'));
+        }
+        if (restartBtn) {
+            restartBtn.classList.toggle('hidden', !this.connected);
+        }
+        if (socketIdElement && socketIdValue && this.socketId) {
+            socketIdValue.textContent = this.socketId.substring(0, 8);
+            socketIdElement.classList.remove('hidden');
+        }
+    }
+
+    hideAllSections() {
+        const sections = ['qr-section', 'loading-section', 'session-section', 'dashboard', 'connection-error'];
+        sections.forEach(section => {
+            const element = document.getElementById(section);
+            if (element) element.classList.add('hidden');
+        });
+    }
+
+    showQR(qrData) {
+        this.hideAllSections();
+        const qrSection = document.getElementById('qr-section');
+        if (qrSection) {
+            const qrContent = typeof qrData === 'string' ? qrData : (qrData.qrCode || qrData.data || '');
+
+            qrSection.innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">QR Kod ile Bağlan</h2>
+                    <p class="text-gray-600 dark:text-gray-400">WhatsApp uygulamasından QR kodu okutun</p>
+                </div>
+                <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-2xl border border-gray-300 dark:border-gray-600">
+                    <img
+                        src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(qrContent)}&size=300x300&margin=10&format=png"
+                        alt="QR Code"
+                        class="w-50 max-w-xs mx-auto rounded-xl"
+                        onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=error'"
+                    />
+                </div>
+                <div class="mt-6 p-4 bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-700 rounded-2xl">
+                    <p class="text-blue-700 dark:text-blue-300 text-sm text-center font-medium">
+                        📱 WhatsApp > Ayarlar > Bağlı Cihazlar > Cihaz Bağla
+                    </p>
+                </div>
+            `;
+            qrSection.classList.remove('hidden');
+        }
+    }
+
+    showLoading(text) {
+        this.hideAllSections();
+        const loadingSection = document.getElementById('loading-section');
+        const loadingText = document.getElementById('loading-text');
+        if (loadingSection && loadingText) {
+            loadingText.textContent = text;
+            loadingSection.classList.remove('hidden');
+        }
+    }
+
+    showSession(text) {
+        this.hideAllSections();
+        const sessionSection = document.getElementById('session-section');
+        const sessionText = document.getElementById('session-text');
+        if (sessionSection && sessionText) {
+            sessionText.textContent = text;
+            sessionSection.classList.remove('hidden');
+        }
+    }
+
+    showDashboard() {
+        this.hideAllSections();
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+            dashboard.classList.remove('hidden');
+            this.renderDashboard();
+        }
+    }
+
+    initializeSocket() {
+        try {
+            this.debug("Socket bağlantısı başlatılıyor...");
+
+            this.socket = io(this.API_BASE, {
+                transports: ["websocket", "polling"],
+                timeout: 15000,
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 2000,
+                forceNew: true
+            });
+
+            this.socket.on("connect", () => this.onSocketConnect());
+            this.socket.on("disconnect", (reason) => this.onSocketDisconnect(reason));
+            this.socket.on("connect_error", (error) => this.onSocketConnectError(error));
+            this.socket.on("qr", (data) => this.onQRReceived(data));
+            this.socket.on("authenticated", () => this.onAuthenticated());
+            this.socket.on("ready", () => this.onReady());
+            this.socket.on("loading_screen", (data) => this.onLoadingScreen(data));
+            this.socket.on("whatsapp_status", (data) => this.onWhatsAppStatus(data));
+            this.socket.on("message", (data) => this.onNewMessage(data));
+            this.socket.on("error", (error) => this.onSocketError(error));
+
+        } catch (error) {
+            this.debug("Socket başlatma hatası: " + error.message);
+            this.updateStatus("error", "Bağlantı hatası");
+        }
+    }
+
+    onSocketConnect() {
+        this.debug("Socket bağlandı: " + this.socket.id);
+        this.socketId = this.socket.id;
+        this.updateStatus("connected", "Sunucuya bağlandı");
+        this.retryCount = 0;
+        this.socket.emit("get_status");
+    }
+
+    onSocketDisconnect(reason) {
+        this.debug("Socket bağlantısı kesildi: " + reason);
+        this.updateStatus("disconnected", `Bağlantı kesildi: ${reason}`);
+        this.connected = false;
+    }
+
+    onSocketConnectError(error) {
+        this.debug("Bağlantı hatası: " + error.message);
+        this.updateStatus("error", "");
+        this.retryCount++;
+
+        const statusText = document.getElementById('status-text');
+        if (statusText) {
+            statusText.textContent = `Sunucuya bağlanılamıyor (${this.retryCount}/${this.maxRetries})`;
+
+            if (this.retryCount >= this.maxRetries) {
+                statusText.textContent = "Sunucuya bağlanılamıyor. Lütfen sunucuyu kontrol edin.";
+                this.showConnectionError();
+            }
+        }
+    }
+
+    onQRReceived(data) {
+        this.debug("QR kod alındı: " + (typeof data === 'string' ? data.substring(0, 50) + '...' : JSON.stringify(data)));
+        this.updateStatus("qr_received", "QR kodu telefonla okutun");
+
+        if (typeof data === 'string') {
+            this.showQR(data);
+        } else if (data.qrCode) {
+            this.showQR(data.qrCode);
+        } else {
+            this.showQR(JSON.stringify(data));
+        }
+    }
+
+    onAuthenticated() {
+        this.debug("Authenticated");
+        this.updateStatus("authenticated", "QR kod okundu, bağlantı kuruluyor...");
+    }
+
+    onReady() {
+        this.debug("WhatsApp bağlandı");
+        this.connected = true;
+        this.updateStatus("ready", "✅ WhatsApp bağlı");
+        this.showDashboard();
+    }
+
+    onLoadingScreen(data) {
+        this.debug("Loading screen: " + data);
+        this.showLoading("WhatsApp yükleniyor... " + (data || ""));
+    }
+
+    onWhatsAppStatus(data) {
+        this.debug("WhatsApp durumu: " + JSON.stringify(data));
+
+        if (data.status === 'ready' && data.isReady) {
+            this.connected = true;
+            this.updateStatus('ready', '✅ WhatsApp bağlı');
+            this.showDashboard();
+            this.loadTemplates();
+            this.loadConversations();
+        } else if (data.status === 'restoring_session') {
+            this.updateStatus('connecting', 'Mevcut session yükleniyor...');
+            this.showSession('Mevcut session yükleniyor...');
+        } else if (data.status === 'qr_required') {
+            this.updateStatus('connected', 'QR kod bekleniyor...');
+        } else if (data.status === 'authenticated') {
+            this.updateStatus('authenticated', 'Doğrulama başarılı, bağlanıyor...');
+        } else if (data.status === 'loading') {
+            this.updateStatus('connecting', `WhatsApp yükleniyor... ${data.progress || ''}`);
+            this.showLoading(`WhatsApp yükleniyor... ${data.progress || ''}`);
+        }
+    }
+
+    onNewMessage(data) {
+        this.debug("Yeni mesaj: " + JSON.stringify(data));
+        this.loadConversations();
+    }
+
+    onSocketError(error) {
+        this.debug("Socket error: " + error);
+        this.updateStatus("error", "Socket hatası");
+    }
+
+    async makeRequest(url, options = {}) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            this.debug("API hatası: " + error.message);
+            throw error;
+        }
+    }
+
+    async checkWhatsAppStatus() {
+        try {
+            const data = await this.makeRequest(`${this.API_BASE}/api/whatsapp-status`);
+            this.debug("WhatsApp durumu: " + JSON.stringify(data));
+
+            if (data.isReady) {
+                this.connected = true;
+                this.updateStatus('ready', '✅ WhatsApp bağlı');
+                this.showDashboard();
+                this.loadTemplates();
+                this.loadConversations();
+            } else if (data.hasSession && !data.isReady) {
+                this.updateStatus('connecting', 'Session restore ediliyor...');
+                this.showSession('Session restore ediliyor...');
+            } else if (data.hasQr) {
+                this.updateStatus('qr_received', 'QR kod bekleniyor...');
+                if (data.state && data.state.qrCode) {
+                    this.showQR(data.state.qrCode);
+                }
+            } else if (data.qr) {
+                this.updateStatus('qr_received', 'QR kod bekleniyor...');
+                if (data.state && data.state.qrCode) {
+                    this.showQR(data.state.qrCode);
+                }
+            }
+
+            const statusData = await this.makeRequest(`${this.API_BASE}/api/status`);
+            this.debug("Status endpoint: " + JSON.stringify(statusData));
+
+            if (statusData.qr && statusData.state && statusData.state.qrCode) {
+                this.updateStatus('qr_received', 'QR kod bekleniyor...');
+                this.showQR(statusData.state.qrCode);
+            }
+
+        } catch (error) {
+            this.debug("Status kontrol hatası: " + error.message);
+        }
+    }
+
+    async checkServerStatus() {
+        try {
+            this.updateStatus("connecting", "Sunucu kontrol ediliyor...");
+            const data = await this.makeRequest(`${this.API_BASE}/api/status`);
+            this.debug("Sunucu durumu: " + JSON.stringify(data));
+            this.updateStatus("connected", "Sunucu aktif");
+
+            if (data.qr && data.state && data.state.qrCode) {
+                this.updateStatus('qr_received', 'QR kod bekleniyor...');
+                this.showQR(data.state.qrCode);
+            }
+        } catch (error) {
+            this.debug("Sunucu kontrol hatası: " + error.message);
+            this.updateStatus("error", "Sunucuya ulaşılamıyor");
+            this.showConnectionError();
+        }
+    }
+
+    async requestQRCode() {
+        try {
+            this.updateStatus("connecting", "QR kod isteniyor...");
+            const response = await this.makeRequest(`${this.API_BASE}/api/request-qr`, {
+                method: 'POST'
+            });
+            this.debug("QR isteği gönderildi");
+            this.updateStatus("connected", "QR kod bekleniyor...");
+
+        } catch (error) {
+            this.debug("QR isteği hatası: " + error.message);
+            this.updateStatus("error", "QR kod alınamadı");
+        }
+    }
+
+    async loadTemplates() {
+        try {
+            this.templates = await this.makeRequest(`${this.API_BASE}/api/templates`);
+            this.debug("Şablonlar yüklendi: " + this.templates.length + " adet");
+            this.renderTemplates();
+        } catch (error) {
+            this.debug("Şablon yükleme hatası: " + error.message);
+        }
+    }
+
+    async addTemplate(trigger, reply) {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ trigger, reply })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            this.debug("Şablon eklendi");
+            await this.loadTemplates();
+            this.renderTemplates();
+            return result;
+        } catch (error) {
+            this.debug("Şablon ekleme hatası: " + error.message);
+            throw error;
+        }
+    }
+
+    async deleteTemplate(index) {
+        try {
+            const response = await fetch(`${this.API_BASE}/api/templates/${index}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            this.debug("Şablon silindi");
+            await this.loadTemplates();
+            this.renderTemplates();
+            return result;
+        } catch (error) {
+            this.debug("Şablon silme hatası: " + error.message);
+            throw error;
+        }
+    }
+
+    async loadConversations() {
+        try {
+            const data = await this.makeRequest(`${this.API_BASE}/api/conversations`);
+            this.conversations = Object.values(data).sort((a, b) =>
+                new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
+            );
+            this.debug("Konuşmalar yüklendi: " + this.conversations.length + " adet");
+            this.renderConversationsList();
+        } catch (error) {
+            this.debug("Konuşma yükleme hatası: " + error.message);
+        }
+    }
+
+    async logout() {
+        try {
+            await this.makeRequest(`${this.API_BASE}/api/logout`, {
+                method: 'POST'
+            });
+            this.debug("Çıkış yapıldı");
+            this.connected = false;
+            this.updateStatus("connecting", "Çıkış yapılıyor...");
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } catch (error) {
+            this.debug("Çıkış hatası: " + error.message);
+            alert("Çıkış yapılırken hata oluştu: " + error.message);
+        }
+    }
+
+    async restartWhatsApp() {
+        try {
+            await this.makeRequest(`${this.API_BASE}/api/restart`, {
+                method: 'POST'
+            });
+            this.debug("Yeniden başlatma isteği gönderildi");
+            this.connected = false;
+            this.updateStatus("connecting", "Yeniden başlatılıyor...");
+        } catch (error) {
+            this.debug("Yeniden başlatma hatası: " + error.message);
+            alert("Yeniden başlatma sırasında hata oluştu: " + error.message);
+        }
+    }
+
+    renderDashboard() {
+        const dashboard = document.getElementById('dashboard');
+        if (!dashboard) return;
+
+        dashboard.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Bağlantı</p>
+                            <p class="text-3xl font-bold text-green-500 dark:text-green-400">Aktif</p>
+                        </div>
+                        <div class="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Toplam Şablon</p>
+                            <p class="text-3xl font-bold text-blue-500 dark:text-blue-400">${this.templates.length}</p>
+                        </div>
+                        <div class="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Toplam Konuşma</p>
+                            <p class="text-3xl font-bold text-purple-500 dark:text-purple-400">${this.conversations.length}</p>
+                        </div>
+                        <div class="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Toplam Mesaj</p>
+                            <p class="text-3xl font-bold text-orange-500 dark:text-orange-400">
+                                ${this.conversations.reduce((total, conv) => total + conv.messageCount, 0)}
+                            </p>
+                        </div>
+                        <div class="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-300 dark:border-gray-700 overflow-hidden">
+                <div class="border-b border-gray-300 dark:border-gray-700">
+                    <nav class="flex space-x-8 px-6">
+                        <button id="templates-tab" class="py-4 px-2 border-b-2 border-green-500 text-green-500 dark:text-green-400 font-medium text-sm flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>Hazır Cevaplar</span>
+                            ${this.templates.length > 0 ? `<span class="bg-green-500 text-green-100 px-2 py-1 rounded-full text-xs">${this.templates.length}</span>` : ''}
+                        </button>
+                        <button id="conversations-tab" class="py-4 px-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium text-sm flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            <span>Geçmiş Konuşmalar</span>
+                            ${this.conversations.length > 0 ? `<span class="bg-blue-500 text-blue-100 px-2 py-1 rounded-full text-xs">${this.conversations.length}</span>` : ''}
+                        </button>
+                    </nav>
+                </div>
+
+                <div id="tab-content">
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="whatsappAssistant.logout()" class="px-8 py-4 bg-red-600 text-white font-semibold rounded-2xl flex items-center justify-center space-x-3 mx-auto transition-colors duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span>WhatsApp Bağlantısını Kes</span>
+                </button>
+            </div>
+        `;
+
+        document.getElementById('templates-tab').onclick = () => this.showTemplatesTab();
+        document.getElementById('conversations-tab').onclick = () => this.showConversationsTab();
+
+        this.showTemplatesTab();
+    }
+
+    showTemplatesTab() {
+        const templatesTab = document.getElementById('templates-tab');
+        const conversationsTab = document.getElementById('conversations-tab');
+        const tabContent = document.getElementById('tab-content');
+
+        templatesTab.className = 'py-4 px-2 border-b-2 border-green-500 text-green-500 dark:text-green-400 font-medium text-sm flex items-center space-x-2';
+        conversationsTab.className = 'py-4 px-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium text-sm flex items-center space-x-2';
+
+        tabContent.innerHTML = this.renderTemplatesContent();
+    }
+
+    showConversationsTab() {
+        const templatesTab = document.getElementById('templates-tab');
+        const conversationsTab = document.getElementById('conversations-tab');
+        const tabContent = document.getElementById('tab-content');
+
+        templatesTab.className = 'py-4 px-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium text-sm flex items-center space-x-2';
+        conversationsTab.className = 'py-4 px-2 border-b-2 border-blue-500 text-blue-500 dark:text-blue-400 font-medium text-sm flex items-center space-x-2';
+
+        tabContent.innerHTML = this.renderConversationsContent();
+    }
+
+    renderTemplatesContent() {
+        return `
+            <div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-6 border-b border-gray-300 dark:border-gray-600">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                                <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                Hazır Cevaplar
+                            </h2>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Belirlediğiniz tetikleyici kelimelerle otomatik cevap verin</p>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 rounded-xl px-3 py-2 border border-gray-300 dark:border-gray-500">
+                            ${this.templates.length} şablon
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <span>Tetikleyici Kelime</span>
+                                </span>
+                            </label>
+                            <input
+                                type="text"
+                                id="trigger-input"
+                                placeholder="örn: merhaba, selam, nasılsın"
+                                class="w-full px-4 py-4 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg transition-colors duration-200"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Otomatik Cevap</span>
+                                </span>
+                            </label>
+                            <input
+                                type="text"
+                                id="reply-input"
+                                placeholder="örn: Hoş geldiniz! Size nasıl yardımcı olabilirim?"
+                                class="w-full px-4 py-4 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-lg transition-colors duration-200"
+                            />
+                        </div>
+                    </div>
+                    <button
+                        onclick="whatsappAssistant.handleAddTemplate()"
+                        class="w-full lg:w-auto px-8 py-4 bg-green-600 text-white font-semibold rounded-2xl flex items-center justify-center space-x-3 text-lg transition-colors duration-200"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span>Yeni Şablon Ekle</span>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    ${this.renderTemplatesList()}
+                </div>
+            </div>
+        `;
+    }
+
+    renderTemplatesList() {
+        if (this.templates.length === 0) {
+            return `
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Henüz şablon bulunmuyor</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg max-w-md mx-auto">
+                        İlk şablonunuzu oluşturmak için yukarıdaki formu doldurun ve otomatik cevaplamaya başlayın.
+                    </p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                ${this.templates.map((t, i) => `
+                    <div class="bg-white dark:bg-gray-700 rounded-2xl p-5 border border-gray-300 dark:border-gray-600">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-start space-x-4">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                            <span class="px-3 py-2 bg-blue-500 text-blue-100 rounded-xl text-sm font-semibold border border-blue-400">
+                                                ${t.trigger}
+                                            </span>
+                                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                            </svg>
+                                            <span class="text-gray-900 dark:text-gray-300 text-lg font-medium truncate">${t.reply}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onclick="whatsappAssistant.handleDeleteTemplate(${i})"
+                                class="ml-4 p-3 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900 rounded-xl flex-shrink-0 transition-colors duration-200"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderConversationsContent() {
+        return `
+            <div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-6 border-b border-gray-300 dark:border-gray-600">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                                <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mr-3">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                </div>
+                                Geçmiş Konuşmalar
+                            </h2>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Tüm WhatsApp konuşma geçmişiniz burada kayıt altında</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    id="conversation-search"
+                                    placeholder="Konuşma ara..."
+                                    class="pl-10 pr-4 py-3 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 w-full sm:w-64 transition-colors duration-200"
+                                />
+                                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            ${this.conversations.length > 0 ? `
+                                <button
+                                    onclick="whatsappAssistant.clearAllConversations()"
+                                    class="px-4 py-3 bg-red-600 text-red-100 rounded-xl border border-red-500 flex items-center space-x-2 whitespace-nowrap transition-colors duration-200"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    <span>Tümünü Temizle</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    ${this.renderConversationsList()}
+                </div>
+            </div>
+        `;
+    }
+
+    renderConversationsList() {
+        if (this.conversations.length === 0) {
+            return `
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Henüz konuşma yok</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg max-w-md mx-auto">
+                        WhatsApp üzerinden gelen mesajlar burada görünecek
+                    </p>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Konuşmalar (${this.conversations.length})</h3>
+                ${this.conversations.map(conv => `
+                    <div class="bg-white dark:bg-gray-700 rounded-2xl p-4 border border-gray-300 dark:border-gray-600">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-gray-900 dark:text-white font-semibold truncate">
+                                            ${this.formatPhoneNumber(conv.phone)}
+                                        </p>
+                                        <p class="text-gray-600 dark:text-gray-400 text-sm truncate">
+                                            ${conv.lastMessage}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                    <span>${conv.messageCount} mesaj</span>
+                                    <span>${this.formatTime(conv.lastMessageTime)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    formatPhoneNumber(phone) {
+        return phone.replace(/@c\.us$/, "").replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
+    }
+
+    formatTime(timestamp) {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    async handleAddTemplate() {
+        const triggerInput = document.getElementById('trigger-input');
+        const replyInput = document.getElementById('reply-input');
+
+        if (triggerInput && replyInput) {
+            const trigger = triggerInput.value.trim();
+            const reply = replyInput.value.trim();
+
+            if (trigger && reply) {
+                try {
+                    await this.addTemplate(trigger, reply);
+                    triggerInput.value = '';
+                    replyInput.value = '';
+                    this.showSuccessMessage('Şablon başarıyla eklendi!');
+                } catch (error) {
+                    this.showErrorMessage('Şablon eklenirken hata oluştu: ' + error.message);
+                }
+            } else {
+                this.showErrorMessage('Lütfen tetikleyici ve cevap alanlarını doldurun.');
+            }
+        }
+    }
+
+    async handleDeleteTemplate(index) {
+        if (confirm("Bu şablonu silmek istediğinizden emin misiniz?")) {
+            try {
+                await this.deleteTemplate(index);
+                this.showSuccessMessage('Şablon başarıyla silindi!');
+            } catch (error) {
+                this.showErrorMessage('Şablon silinirken hata oluştu: ' + error.message);
+            }
+        }
+    }
+
+    showSuccessMessage(message) {
+        this.showMessage(message, 'green');
+    }
+
+    showErrorMessage(message) {
+        this.showMessage(message, 'red');
+    }
+
+    showMessage(message, type) {
+        const existingMessage = document.getElementById('flash-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'flash-message';
+        messageDiv.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-2xl border ${
+            type === 'green'
+                ? 'bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'
+                : 'bg-red-100 dark:bg-red-900 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
+        } font-semibold transition-all duration-300 transform translate-x-full`;
+
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+            messageDiv.classList.remove('translate-x-full');
+        }, 100);
+
+        setTimeout(() => {
+            messageDiv.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    showConnectionError() {
+        this.hideAllSections();
+        document.getElementById('connection-error').classList.remove('hidden');
+    }
+
+    async clearAllConversations() {
+        if (confirm("Tüm konuşma geçmişini silmek istediğinizden emin misiniz?")) {
+            try {
+                await this.makeRequest(`${this.API_BASE}/api/conversations`, {
+                    method: 'DELETE'
+                });
+                this.debug("Tüm konuşmalar temizlendi");
+                await this.loadConversations();
+                this.showSuccessMessage('Tüm konuşmalar başarıyla temizlendi!');
+            } catch (error) {
+                this.debug("Konuşma temizleme hatası: " + error.message);
+                this.showErrorMessage('Konuşmalar temizlenirken hata oluştu: ' + error.message);
+            }
+        }
+    }
+
+    reconnect() {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket.connect();
+        } else {
+            this.initializeSocket();
+        }
+    }
+
+    forceQRRequest() {
+        if (this.socket) {
+            this.socket.emit("get_qr");
+        }
+        this.requestQRCode();
+    }
+
+    renderTemplates() {
+        if (document.getElementById('templates-tab') && document.getElementById('templates-tab').classList.contains('border-green-500')) {
+            this.showTemplatesTab();
+        }
+    }
+}
+
+let whatsappAssistant;
+
+document.addEventListener('DOMContentLoaded', function() {
+    whatsappAssistant = new WhatsAppAssistant();
+
+    setTimeout(() => {
+        whatsappAssistant.checkWhatsAppStatus();
+    }, 3000);
+});
+
+function checkServerStatus() {
+    if (whatsappAssistant) whatsappAssistant.checkServerStatus();
+}
+
+function requestQRCode() {
+    if (whatsappAssistant) whatsappAssistant.requestQRCode();
+}
+
+function forceQRRequest() {
+    if (whatsappAssistant) whatsappAssistant.forceQRRequest();
+}
+
+function restartWhatsApp() {
+    if (whatsappAssistant) {
+        if (confirm("WhatsApp bağlantısını yeniden başlatmak istediğinizden emin misiniz?")) {
+            whatsappAssistant.restartWhatsApp();
+        }
+    }
+}
+
+function reconnect() {
+    if (whatsappAssistant) whatsappAssistant.reconnect();
+}
+
+function hideDebug() {
+    if (whatsappAssistant) whatsappAssistant.hideDebug();
+}
+</script>
+{% endblock %}
